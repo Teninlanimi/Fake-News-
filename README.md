@@ -4,6 +4,8 @@
 
 An AI-powered fake news detection system using NLP and machine learning to classify news articles and provide confidence based predictions.
 
+> **New here?** Start with the [plain-English guide](PLAIN_ENGLISH_GUIDE.md) — what this project does, why it's useful, and where it breaks down. No jargon.
+
 Every push retrains the models and runs the accuracy gate (94% minimum on the held-out test set) in [GitHub Actions](.github/workflows/ci.yml); PRs run a fast smoke-test mode. The out-of-domain LIAR stress test runs too, as an informational check.
 
 ## What's inside
