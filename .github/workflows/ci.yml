@@ -1,0 +1,51 @@
+name: CI
+
+# Train + evaluate the model on every push/PR so accuracy regressions fail loudly.
+# A GitHub-hosted runner handles the full pipeline in a few minutes
+# (TF-IDF + linear models are cheap; the heavy DistilBERT experiment is not in CI).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  train-and-evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Train models (full pipeline on push, fast smoke test on PRs)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            MIN_ACCURACY=0.85 python train_model.py --fast
+          else
+            MIN_ACCURACY=0.94 python train_model.py
+          fi
+
+      - name: Print model comparison
+        run: cat model/metrics.json
+
+      - name: Stress test on LIAR (out-of-domain, informational)
+        # Informational: an external-dataset hiccup shouldn't fail the build.
+        continue-on-error: true
+        run: python stress_test.py
+
+      - name: Upload metrics and artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-metrics
+          path: |
+            model/metrics.json
+            stress_results.json
+          if-no-files-found: warn

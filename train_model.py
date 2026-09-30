@@ -22,8 +22,10 @@ Artifacts saved to model/:
 Run:  py train_model.py
 """
 
+import argparse
 import json
 import os
+import sys
 import time
 
 import joblib
@@ -48,11 +50,19 @@ DATA_URL = (
 )
 MODEL_DIR = "model"
 
+# CI quality gate: the best model must beat this on the held-out test set.
+MIN_ACCURACY = 0.94
+# --fast mode: smoke-test settings for PRs (subset of data, quick models).
+FAST_SAMPLE_N = 1500
 
-def load_data():
+
+def load_data(n_limit=None):
     print("Loading dataset...")
     df = pd.read_csv(DATA_URL)
     df = df.dropna(subset=["title", "text", "label"])
+    if n_limit:
+        df = df.sample(n=n_limit, random_state=RANDOM_STATE).reset_index(drop=True)
+        print(f"  (fast mode: sampled down to {n_limit} articles)")
     df["combined_text"] = df["title"].fillna("") + " " + df["text"].fillna("")
     X = df["combined_text"]
     y = df["label"]
@@ -62,7 +72,16 @@ def load_data():
     return df, X, y
 
 
-def build_models():
+def build_models(fast=False):
+    if fast:
+        # Skip the calibrated SVC in fast mode: its 5-fold calibration is the
+        # slowest part and fast mode only checks that the pipeline works.
+        return {
+            "logreg_baseline": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+            "logreg_tuned": LogisticRegression(
+                max_iter=2000, C=4.0, random_state=RANDOM_STATE
+            ),
+        }
     return {
         "logreg_baseline": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
         "logreg_tuned": LogisticRegression(
@@ -91,8 +110,16 @@ SMOKE_TEST_HEADLINES = [
 ]
 
 
-def main():
-    df, X, y = load_data()
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        help=f"smoke-test mode: sample {FAST_SAMPLE_N} articles, skip slow models",
+    )
+    args = parser.parse_args(argv)
+
+    df, X, y = load_data(n_limit=FAST_SAMPLE_N if args.fast else None)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=RANDOM_STATE, stratify=y
     )
@@ -105,7 +132,7 @@ def main():
     y_train_aug = list(y_train) + list(y_train)
     print(f"  + {len(train_titles)} title examples -> {len(X_train_aug)} training rows")
 
-    print("Fitting word+char TF-IDF union...")
+    print("Fitting word+char TF-IDF union...", flush=True)
     featurizer = PairFeaturizer()
     X_train_feats = featurizer.fit_transform(X_train_aug)
     X_test_feats = featurizer.transform(X_test)
@@ -113,7 +140,7 @@ def main():
 
     results = {}
     best_name, best_model, best_acc = None, None, -1.0
-    for name, clf in build_models().items():
+    for name, clf in build_models(fast=args.fast).items():
         t0 = time.time()
         clf.fit(X_train_feats, y_train_aug)
         elapsed = time.time() - t0
@@ -145,6 +172,22 @@ def main():
     }
     with open(os.path.join(MODEL_DIR, "metrics.json"), "w", encoding="utf-8") as f:
         json.dump(metrics, f, indent=2)
+
+    # Accuracy gate for CI: fail loudly (non-zero exit) on quality regression.
+    # Fast mode gets a lower default bar (it trains on a small sample).
+    default_gate = 0.85 if args.fast else MIN_ACCURACY
+    gate_threshold = float(os.environ.get("MIN_ACCURACY", default_gate))
+    gate_acc = results[best_name]["accuracy"]
+    if gate_acc < gate_threshold:
+        print(
+            f"::error::Accuracy gate FAILED: best model '{best_name}' scored "
+            f"{gate_acc:.4f}, below the required {gate_threshold:.4f}"
+        )
+        sys.exit(1)
+    print(
+        f"Accuracy gate OK: {best_name} {gate_acc:.4f} >= {gate_threshold:.4f}",
+        flush=True,
+    )
 
     print("\nSmoke test on sample headlines:")
     proba = best_model.predict_proba(featurizer.transform(SMOKE_TEST_HEADLINES))
