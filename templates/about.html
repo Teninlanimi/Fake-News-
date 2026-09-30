@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — Fake News Detector</title>
+  <style>
+    :root {
+      --bg: #0f1420;
+      --panel: #1a2233;
+      --panel-edge: #2a3550;
+      --text: #e8edf7;
+      --muted: #8b98b4;
+      --real: #22c55e;
+      --fake: #ef4444;
+      --accent: #6366f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 800px at 80% -10%, #1c2742 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background: var(--panel);
+      border: 1px solid var(--panel-edge);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    h2 { font-size: 1.05rem; margin: 26px 0 8px; }
+    .tagline { color: var(--muted); margin-bottom: 8px; }
+    .back {
+      display: inline-block; margin-bottom: 22px; color: var(--accent);
+      text-decoration: none; font-size: .9rem;
+    }
+    .back:hover { text-decoration: underline; }
+    p, li { color: var(--muted); line-height: 1.65; font-size: .95rem; margin-bottom: 10px; }
+    strong, b { color: var(--text); }
+    em { color: var(--text); font-style: italic; }
+    ul { padding-left: 4px; list-style: none; margin-bottom: 10px; }
+    li { padding-left: 18px; position: relative; }
+    li::before { content: "•"; position: absolute; left: 4px; color: var(--accent); }
+    .good li::before { content: "✓"; color: var(--real); }
+    .bad li::before { content: "✗"; color: var(--fake); }
+    blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 8px 14px; margin: 12px 0;
+      color: var(--text); font-size: .93rem;
+      background: rgba(99,102,241,.07); border-radius: 0 8px 8px 0;
+    }
+    .stat {
+      display: flex; gap: 14px; align-items: baseline;
+      padding: 14px 16px; border-radius: 10px; margin: 12px 0;
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+    }
+    .stat .big { font-size: 1.6rem; font-weight: 800; color: var(--fake); }
+    footer { margin-top: 20px; color: var(--muted); font-size: .8rem; text-align: center; }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <a class="back" href="/">&larr; Back to the detector</a>
+    <h1>📰 About this app</h1>
+    <p class="tagline">No jargon — just what this thing is, what it's good for, and where it fails.</p>
+
+    <h2>The one-sentence version</h2>
+    <p>Paste in a news article or headline, and the app tells you whether it <strong>reads</strong> like real news or fake news — with a confidence percentage. A spell-checker, but for the <em>style</em> of news writing.</p>
+
+    <h2>How did it learn to do that?</h2>
+    <p>Imagine someone who spent weeks doing nothing but reading about 6,300 news articles — roughly half real, half fake — until they internalized the <em>way</em> each type tends to be written: calm and sourced on one side, dramatic and shouty on the other. After all that reading, they'd guess which is which <strong>just from the writing style</strong> — the same way you can often spot a tabloid headline at a glance without checking any facts.</p>
+    <p>That's exactly what this program did. It's a pattern-spotter for words and writing style.</p>
+
+    <h2>What it's genuinely useful for</h2>
+    <ul class="good">
+      <li><strong>A rough gut-check on article-style text</strong> — if a piece of "news" reads like tabloid junk, the app will usually say so (~96% accurate within its world).</li>
+      <li><strong>Learning how AI actually works</strong> — this project shows the full honest arc: build it, measure it, deploy it… then deliberately stress-test it to find where it breaks.</li>
+      <li><strong>An automatic quality watchdog</strong> — every update rebuilds the model and re-runs its "exams"; if a change makes it dumber, the update is rejected automatically.</li>
+    </ul>
+
+    <h2>Where it breaks down</h2>
+    <p>We deliberately tested it on short political claims fact-checked by PolitiFact — something it had never seen. The result:</p>
+    <div class="stat">
+      <span class="big">49%</span>
+      <span>accuracy — a coin flip. Random guessing does better.</span>
+    </div>
+    <p>Why? Because it never learned <strong>"what's true."</strong> It learned <strong>"what professional news writing looks like."</strong> A false but calmly-worded claim fooled it completely; a true but dramatic-sounding one got flagged as fake.</p>
+
+    <h2>Other honest limits</h2>
+    <ul class="bad">
+      <li><strong>It doesn't know facts.</strong> It can't check whether unemployment is really 3.9% — it only knows what words tend to appear next to each other.</li>
+      <li><strong>It can be confidently wrong.</strong> Outside its comfort zone it doesn't say "I don't know" — it confidently gives a wrong answer.</li>
+      <li><strong>It lives in a small world.</strong> It studied one collection of US news articles from the mid-2010s, in English.</li>
+      <li><strong>Clever fakes can pass.</strong> A polished fake sails through; a sloppy true story gets flagged. It judges the wrapping paper, not the gift.</li>
+    </ul>
+
+    <h2>The takeaway</h2>
+    <p>Think of this app as a <strong>writing-style inspector</strong> — a decent one, within its lane. It is <strong>not</strong> a truth machine, a lie detector, or a fact-checker. Knowing exactly where it can't help you is the most useful thing it offers.</p>
+    <blockquote>The full technical story — including real examples of it failing — lives in STRESS_TEST_REPORT.md and PLAIN_ENGLISH_GUIDE.md in the GitHub repo.</blockquote>
+  </div>
+
+  <footer>
+    Educational project · <a href="/">Fake News Detector</a> · <a href="/health">/health</a>
+  </footer>
+</body>
+</html>
