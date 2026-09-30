@@ -1,0 +1,8 @@
+# trained artifacts (rebuild with `py train_model.py`)
+model/
+
+# logs & caches
+*.log
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
