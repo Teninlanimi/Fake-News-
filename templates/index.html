@@ -100,6 +100,20 @@
     .samples .s-label.real { color: var(--real); }
     .samples .s-label.fake { color: var(--fake); }
     .samples .s-text { color: var(--muted); font-size: .88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .limits { margin-top: 28px; border-top: 1px solid var(--panel-edge); padding-top: 14px; }
+    .limits summary {
+      cursor: pointer; color: var(--muted); font-size: .85rem;
+      text-transform: uppercase; letter-spacing: 1px; user-select: none;
+    }
+    .limits summary:hover { color: var(--text); }
+    .limits-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; }
+    .limits h3 { font-size: .82rem; margin-bottom: 8px; }
+    .limits ul { list-style: none; color: var(--muted); font-size: .85rem; line-height: 1.55; }
+    .limits li { padding-left: 14px; position: relative; margin-bottom: 6px; }
+    .limits li::before { content: "•"; position: absolute; left: 2px; }
+    .limits .can h3 { color: var(--real); }
+    .limits .cant h3 { color: var(--fake); }
+    @media (max-width: 560px) { .limits-grid { grid-template-columns: 1fr; } }
     footer { margin-top: 20px; color: var(--muted); font-size: .8rem; text-align: center; }
     footer a { color: var(--accent); text-decoration: none; }
   </style>
@@ -137,11 +151,32 @@
       <h2>Test on examples</h2>
       <ul id="sample-list"></ul>
     </div>
+
+    <details class="limits">
+      <summary>What this model can &amp; can't do</summary>
+      <div class="limits-grid">
+        <div class="can">
+          <h3>✓ Reasonably good at</h3>
+          <ul>
+            <li>News-article-style text: telling tabloid-style writing from wire-service reporting (~96% on its test set)</li>
+            <li>Calibrated confidence for that style judgment</li>
+          </ul>
+        </div>
+        <div class="cant">
+          <h3>✗ Not built for</h3>
+          <ul>
+            <li>Fact-checking: on short political claims it scores ~49% — a coin flip (LIAR stress test)</li>
+            <li>Truth. It matches writing style from one 2014–16 dataset — nothing more</li>
+          </ul>
+        </div>
+      </div>
+    </details>
   </div>
 
   <footer>
-    Educational project — this is a pattern matcher trained on one dataset,
-    not a ground-truth fact checker. <a href="/health">/health</a>
+    Educational project — detects writing style, not truth. See
+    STRESS_TEST_REPORT.md in the repo for where it breaks down.
+    <a href="/health">/health</a>
   </footer>
 
   <script>

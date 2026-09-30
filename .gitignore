@@ -3,6 +3,10 @@ model/
 
 # logs & caches
 *.log
+*_log.txt
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
+
+# third-party stress-test data (auto-downloaded by stress_test.py)
+liar_test.tsv

@@ -42,3 +42,5 @@ py app.py
 ## Honest caveats
 
 This is a pattern matcher trained on a single dataset, not a ground-truth fact checker. It learns stylistic patterns (wire-service phrasing vs. sensationalist writing) from one corpus, so it can be confidently wrong on topics or styles it hasn't seen. The footer in the app says the same.
+
+How confidently wrong? We stress-tested it on the [LIAR dataset](https://www.cs.ucsb.edu/~william/data/liar_dataset) (short PolitiFact statements it never saw): **accuracy drops from ~96% to 48.8% — a coin flip**. The model learned "what wire copy looks like," not "what's true." Full breakdown in [STRESS_TEST_REPORT.md](STRESS_TEST_REPORT.md); rerun it with `py stress_test.py`.
